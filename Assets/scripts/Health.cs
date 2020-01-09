@@ -12,6 +12,8 @@ using UnityEngine.Networking;
 
 public class Health : NetworkBehaviour
 {
+    public bool destroyOnDeath;  // 玩家角色 与 敌人的判断
+
     public const int MAX_HEALTH = 100;  //最大血量  
 
     public RectTransform healthBar;
@@ -23,11 +25,24 @@ public class Health : NetworkBehaviour
     /// </summary>
     /// <param name="amount">伤害值</param>
     public void TakeDamage(int amount) {
+        if (!isServer)
+        {
+            return;
+        }    
+
         currentHealth -= amount;
         if (currentHealth <= 0)
         {
-            Debug.LogFormat("{0}牺牲了......",gameObject.name);
-            RpcRespawn();
+            if (destroyOnDeath) //如果是敌人
+            {
+                Destroy(gameObject);
+            }
+            else
+            {
+                Debug.LogFormat("{0}牺牲了......", gameObject.name);
+                RpcRespawn();
+            }
+
         }
         //healthBar.sizeDelta = new Vector2(currentHealth,healthBar.sizeDelta.y);
     }
