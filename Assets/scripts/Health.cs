@@ -19,16 +19,25 @@ public class Health : NetworkBehaviour
     public RectTransform healthBar;
     [SyncVar(hook = "OnChangeHealth")] //同步变量
     private int currentHealth = MAX_HEALTH;
+    private NetworkStartPosition[] spawnPoints;
+
+    private void Start()
+    {
+        if (isLocalPlayer)
+        {
+            spawnPoints = FindObjectsOfType<NetworkStartPosition>();
+        }
+    }
 
     /// <summary>
     /// 减少生命值
     /// </summary>
     /// <param name="amount">伤害值</param>
     public void TakeDamage(int amount) {
-        if (!isServer)
-        {
-            return;
-        }    
+        //if (!isServer)
+        //{
+        //    return;
+        //}
 
         currentHealth -= amount;
         if (currentHealth <= 0)
@@ -40,7 +49,11 @@ public class Health : NetworkBehaviour
             else
             {
                 Debug.LogFormat("{0}牺牲了......", gameObject.name);
-                RpcRespawn();
+                if (!isServer)
+                {
+                    return;
+                }
+                RpcRespawn();//Rpc接口应该有服务器调用
             }
 
         }
@@ -62,7 +75,14 @@ public class Health : NetworkBehaviour
     private void RpcRespawn() {
         if (isLocalPlayer)
         {
-            transform.position = Vector3.zero;
+           Vector3 spawnPoint = Vector3.zero;
+            if (spawnPoints!=null && spawnPoints.Length > 0)
+            {
+                spawnPoint = spawnPoints[Random.Range(0, spawnPoints.Length)].transform.position;
+            }
+            transform.position = spawnPoint;
+
+            currentHealth = MAX_HEALTH;
         }
     }
 
