@@ -27,7 +27,10 @@ public class PlayerController : NetworkBehaviour
             return;
         }
         PlayerMove();
-        Fire();
+        if (Input.GetKeyDown(KeyCode.Space))
+        {
+            CmdFire();
+        }
     }
 
     //玩家移动检测
@@ -40,16 +43,18 @@ public class PlayerController : NetworkBehaviour
     }
 
     //玩家开火检测
-    private void Fire() {
-        if (Input.GetKeyDown(KeyCode.Space))
-        {
-            //生成子弹
-            var bullet = Instantiate(bulletPrefab,bulletSpawn.position,bulletSpawn.rotation);
-            //给子弹加速度
-            bullet.GetComponent<Rigidbody>().velocity = bullet.transform.forward * 6;
-            //销毁子弹
-            Destroy(bullet,2.0f);
-        }
+    //[Command] 属性表示下面的函数将被客户端调用，将在服务端上运行。函数中的任何参数都将自动通过Command.Command传递给服务器，只能从本地玩家发送命令。
+    //ps: Command 标识的函数，以"CmdXXX"开头
+    [Command]
+    private void CmdFire() {
+        //生成子弹
+        var bullet = Instantiate(bulletPrefab,bulletSpawn.position,bulletSpawn.rotation);
+        //给子弹加速度
+        bullet.GetComponent<Rigidbody>().velocity = bullet.transform.forward * 6;
+        //在客户端生成子弹
+        NetworkServer.Spawn(bullet);
+        //销毁子弹
+        Destroy(bullet,2.0f);
     }
 
     //NetworkBehaviour接口重写
